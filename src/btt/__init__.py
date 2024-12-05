@@ -1,5 +1,3 @@
-# src/btt/__init__.py
-from .reference import BTTLayer
-from .cuda_layer import BTTLayerCUDA
+from .reference import BTTLayer, BTTFunction
 
-__all__ = ['BTTLayer', 'BTTLayerCUDA']
+__all__ = ['BTTLayer', 'BTTFunction']

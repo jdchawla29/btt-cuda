@@ -1,30 +1,30 @@
 # setup.py
+import os
 from setuptools import setup, find_packages
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
-import os
 
-print(f"Current directory: {os.getcwd()}")
-cuda_ext = CUDAExtension(
-    name='btt.cuda_impl',
-    sources=[
-        'src/cuda/btt_cuda.cpp',
-        'src/cuda/btt_cuda_kernel.cu',
-    ],
-    extra_compile_args={
-        'cxx': ['-O3'],
-        'nvcc': ['-O3']
-    },
-    verbose=True  # Add verbose flag
-)
-print(f"Extension sources: {cuda_ext.sources}")
-print(f"Extension name: {cuda_ext.name}")
+# Get absolute paths
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+cuda_sources = [
+    os.path.join(curr_dir, 'src/btt_cuda/cuda/btt_cuda.cpp'),
+    os.path.join(curr_dir, 'src/btt_cuda/cuda/btt_cuda_kernel.cu')
+]
 
 setup(
     name='btt',
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    ext_modules=[cuda_ext],
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    ext_modules=[
+        CUDAExtension(
+            name='btt_cuda._cuda',
+            sources=cuda_sources,
+            extra_compile_args={
+                'cxx': ['-O3'],
+                'nvcc': ['-O3']
+            }
+        ),
+    ],
     cmdclass={
-        'build_ext': BuildExtension.with_options(no_python_abi_suffix=True)
+        'build_ext': BuildExtension
     }
 )
