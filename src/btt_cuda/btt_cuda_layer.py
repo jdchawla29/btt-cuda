@@ -10,45 +10,43 @@ class BTTFunction(torch.autograd.Function):
         m1, m2 = ms
         n1, n2 = ns
         r1, r2, r3 = rs
-
-        # Call our CUDA implementation
-        output = forward(
-            x, W1, W2,
-            m1, m2, n1, n2, r1, r2
-        )
+        
+        # Call CUDA (cuBLAS) forward
+        out, out1 = forward(x, W1, W2, m1, m2, n1, n2, r1, r2)
         
         # Save for backward
-        intermediate = torch.empty(x.shape[0], m2, n1, r2, device=x.device, dtype=x.dtype)
-        ctx.save_for_backward(x, W1, W2, intermediate)
+        ctx.save_for_backward(x, W1, W2, out1)
         ctx.shapes = shapes
-        return output
+        return out
 
     @staticmethod
     def backward(ctx, grad_output):
-        x, W1, W2, intermediate = ctx.saved_tensors
+        x, W1, W2, out1 = ctx.saved_tensors
         rs, ms, ns = ctx.shapes
         m1, m2 = ms
         n1, n2 = ns
         r1, r2, r3 = rs
 
-        # Call our CUDA implementation
-        grad_input, grad_W1, grad_W2 = backward(
-            grad_output, x, W1, W2, intermediate,
-            m1, m2, n1, n2, r1, r2
-        )
-
+        grad_input, grad_W1, grad_W2 = backward(grad_output, x, W1, W2, out1, m1, m2, n1, n2, r1, r2)
         return grad_input, grad_W1, grad_W2, None
+    
+def closest_factors(n):
+    root = int(math.isqrt(n))
+    # Start from the integer sqrt and go downwards.
+    for i in range(root, 0, -1):
+        if n % i == 0:
+            return n // i, i
+    # Fallback (should never actually reach here since 1 is always a divisor)
+    return n, 1
 
 class BTTLayer(nn.Module):
     """Block Tensor-Train Layer with CUDA implementation"""
     def __init__(self, d_in: int, d_out: int, tt_rank: int, normalize: bool = False):
         super().__init__()
 
-        # Factor dimensions using sqrt for now
-        self.m1 = int(math.sqrt(d_in))
-        self.m2 = d_in // self.m1
-        self.n1 = int(math.sqrt(d_out))
-        self.n2 = d_out // self.n1
+        # Find factors closest to sqrt
+        self.m1, self.m2 = closest_factors(d_in)
+        self.n1, self.n2 = closest_factors(d_out)
 
         # Verify dimensions
         assert self.m1 * self.m2 == d_in, f"Input dim {d_in} must be factorizable"

@@ -69,16 +69,29 @@ class BTTFunction(torch.autograd.Function):
 
         return dx, dW1, dW2, None
 
+def closest_factors(n):
+    root = int(math.isqrt(n))
+    # Start from the integer sqrt and go downwards.
+    for i in range(root, 0, -1):
+        if n % i == 0:
+            return n // i, i
+    # Fallback (should never actually reach here since 1 is always a divisor)
+    return n, 1
+
 class BTTLayer(nn.Module):
     """Block Tensor-Train Layer implementation based on ops/operators.py"""
     def __init__(self, d_in: int, d_out: int, tt_rank: int, normalize: bool = False):
         super().__init__()
 
-        # Factor dimensions using sqrt for now
-        self.m1 = int(math.sqrt(d_in))
-        self.m2 = d_in // self.m1
-        self.n1 = int(math.sqrt(d_out))
-        self.n2 = int(math.sqrt(d_out))
+        # # Factor dimensions using sqrt for now
+        # self.m1 = int(math.sqrt(d_in))
+        # self.m2 = d_in // self.m1
+        # self.n1 = int(math.sqrt(d_out))
+        # self.n2 = int(math.sqrt(d_out))
+
+        # Find factors closest to sqrt
+        self.m1, self.m2 = closest_factors(d_in)
+        self.n1, self.n2 = closest_factors(d_out)
 
         # Verify dimensions
         assert self.m1 * self.m2 == d_in, f"Input dim {d_in} must be factorizable"

@@ -7,7 +7,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 cuda_sources = [
     os.path.join(curr_dir, 'src/btt_cuda/cuda/btt_cuda.cpp'),
-    os.path.join(curr_dir, 'src/btt_cuda/cuda/btt_cuda_kernel.cu')
+    # os.path.join(curr_dir, 'src/btt_cuda/cuda/btt_cuda_kernel.cu')
 ]
 
 setup(
