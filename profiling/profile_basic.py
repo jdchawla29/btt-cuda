@@ -2,6 +2,7 @@ import sys
 import os
 import torch
 from torch.profiler import profile, ProfilerActivity
+import time
 
 # Add src/btt to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
@@ -23,6 +24,7 @@ def btt_layer():
 
     y = layer(x)
 
+start_time = time.time()
 with profile(
     activities=[
         ProfilerActivity.CPU, 
@@ -31,7 +33,9 @@ with profile(
     record_shapes=True,
     ) as prof:
     btt_layer()
+end_time = time.time()
 
+print(f"btt_layer execution time: {end_time - start_time} seconds")
 print(prof.key_averages().table())
 
 
@@ -52,6 +56,7 @@ def btt_cuda_layer():
 
     y = layer(x)
 
+start_time = time.time()
 with profile(
     activities=[
         ProfilerActivity.CPU, 
@@ -60,5 +65,7 @@ with profile(
     record_shapes=True,
     ) as prof:
     btt_cuda_layer()
+end_time = time.time()
 
+print(f"btt_cuda_layer execution time: {end_time - start_time} seconds")
 print(prof.key_averages().table())
