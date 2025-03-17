@@ -9,11 +9,19 @@ BTT-CUDA provides memory-efficient parameterization for neural network layers th
 - **CUDA Accelerated**: Optimized CUDA implementation using cuBLAS for fast forward and backward passes
 - **Numerically Stable**: High precision maintained between reference and CUDA implementations
 - **PyTorch Native**: Full compatibility with PyTorch's autograd system
+- **JIT Compilation**: Uses torch.utils.cpp_extension.load for just-in-time compilation
+
+## Requirements
+
+- PyTorch >= 1.7.0
+- CUDA toolkit compatible with your PyTorch version
+- C++ compiler compatible with PyTorch's extension system
 
 ## Installation
 
 ```bash
-pip install .
+# Install from source
+pip install -e .
 ```
 
 ## Quick Start
@@ -60,6 +68,12 @@ cuda_out = cuda_layer(x_cuda).cpu()
 # Verify outputs match
 print(f"Max difference: {(py_out - cuda_out).abs().max().item()}")
 ```
+
+## Implementation Note
+
+This package uses PyTorch's JIT compilation with `torch.utils.cpp_extension.load` to compile the CUDA extensions at runtime. The first import might take longer as it compiles the extensions, but subsequent imports will be faster as they use the cached compiled libraries.
+
+When the package is first imported, you'll see compilation messages as PyTorch builds the CUDA extensions. This is normal and only happens the first time (or when the source files change).
 
 ## Documentation
 
