@@ -1,7 +1,38 @@
 import math
 import torch
 import torch.nn as nn
-from . import forward_optimized, backward_optimized
+
+# load cuda extension inline from btt_cuda/src/btt_cuda/cuda/btt_cuda.cpp
+from torch.utils.cpp_extension import load_inline
+
+# read the source code from the file into a string
+from pathlib import Path
+import os
+
+# Get the directory of the current file
+current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+
+# Use relative path from current file location
+with open(current_dir / 'cuda' / 'btt_cuda_optimized.cpp', 'r') as f:
+    btt_cuda_cpp = f.read()
+
+# Load CUDA extension
+btt_cuda = load_inline(
+    name='btt_cuda_optimized',
+    cpp_sources=[btt_cuda_cpp],
+    functions=[
+        'btt_cuda_forward',
+        'btt_cuda_backward'
+    ],
+    verbose=True,
+    with_cuda=True,
+    extra_cflags=['-O3'],
+    extra_ldflags=['-lcublas']
+)
+
+# Forward and backward functions
+forward_optimized = btt_cuda.btt_cuda_forward
+backward_optimized = btt_cuda.btt_cuda_backward
 
 class BTTFunctionOptimized(torch.autograd.Function):
     @staticmethod

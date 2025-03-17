@@ -15,9 +15,9 @@ from src.btt_cuda import BTTLayerOptimized as CUDABTTLayerOptimized
 
 # Parameters
 batch_size = 32
-d_in = 1024
-d_out = 512
-tt_rank = 16
+d_in = 4096
+d_out = 4096
+tt_rank = 4
 device = torch.device("cuda")
 
 def main():
